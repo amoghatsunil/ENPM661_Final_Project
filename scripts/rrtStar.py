@@ -12,11 +12,18 @@ class Node:
         self.cost = 0.0
 
 class RRTStar:
-    def __init__(self, start, goal, map_size, obstacle_list, step_size=0.2, goal_sample_rate=0.1, max_iter=500, search_radius=0.5):
-        self.start = Node(*start)
+    def __init__(self, start, goal, map_size, step_size=0.2, goal_sample_rate=0.1, max_iter=2000, search_radius=0.5):
+        self.start = Node(*start) 
         self.goal = Node(*goal)
         self.map_size = map_size
-        self.obstacle_list = obstacle_list
+        self.obstacle_list =[
+                        (2.75, 2.5, 0.25),
+                        (3.25, 2.5, 0.25),
+                        (3.75, 2.5, 0.25),
+                        (4.25, 2.5, 0.25),
+                        (4.75, 2.5, 0.25),
+                        (2.0, 3.5, 0.25)
+                        ]
         self.step_size = step_size
         self.goal_sample_rate = goal_sample_rate
         self.max_iter = max_iter
@@ -51,9 +58,9 @@ class RRTStar:
     def get_nearest_node(self, nodes, rnd_node):
         return min(nodes, key=lambda node: self.distance(node, rnd_node))
 
-    def smooth_path(self, path, obstacle_list, iterations=100):
+    def smooth_path(self, path, iterations=100):
         def is_collision_free(p1, p2):
-            for (ox, oy, r) in obstacle_list:
+            for (ox, oy, r) in self.obstacle_list:
                 for t in np.linspace(0, 1, num=20):
                     x = p1[0] + t * (p2[0] - p1[0])
                     y = p1[1] + t * (p2[1] - p1[1])
@@ -85,9 +92,9 @@ class RRTStar:
         smoothed_path.append(path[-1])
         return smoothed_path
     
-    def cubic_spline_smooth(self, path, obstacle_list, num_points=200):
+    def cubic_spline_smooth(self, path, num_points=1000):
         def is_collision_free(p1, p2):
-            for (ox, oy, r) in obstacle_list:
+            for (ox, oy, r) in self.obstacle_list:
                 for t in np.linspace(0, 1, num=20):
                     x = p1[0] + t * (p2[0] - p1[0])
                     y = p1[1] + t * (p2[1] - p1[1])
@@ -166,42 +173,22 @@ class RRTStar:
 
     def distance(self, n1, n2):
         return math.hypot(n1.x - n2.x, n1.y - n2.y)
-
-# Define obstacles based on image
-obstacles = [
-    (2.75, 2.5, 0.25),
-    (3.25, 2.5, 0.25),
-    (3.75, 2.5, 0.25),
-    (4.25, 2.5, 0.25),
-    (4.75, 2.5, 0.25),
-    (2.0, 3.5, 0.25)
-]
- 
-# Visualize result
-def plot(rrt_star, path):
-    fig, ax = plt.subplots()
-    for node in rrt_star.nodes:
-        if node.parent:
-            ax.plot([node.x, node.parent.x], [node.y, node.parent.y], "-g", linewidth=0.5)
-    for (ox, oy, r) in rrt_star.obstacle_list:
-        circle = plt.Circle((ox, oy), r, color='r')
-        ax.add_patch(circle)
-    if path:
-        px, py = zip(*path)
-        ax.plot(px, py, '-b', linewidth=2)
-    ax.plot(rrt_star.start.x, rrt_star.start.y, "bs")
-    ax.plot(rrt_star.goal.x, rrt_star.goal.y, "gs")
-    ax.set_xlim(0, rrt_star.map_size[0])
-    ax.set_ylim(0, rrt_star.map_size[1])
-    ax.set_aspect('equal')
-    plt.grid(True)
-    plt.show()
-
-# Create RRT* planner and plan path
-rrt_star = RRTStar(start=(4.5, 1.5), goal=(4.5, 4.5), map_size=(5.0, 5.0), obstacle_list=obstacles)
-# path = rrt_star.plan()
-raw_path = rrt_star.plan() 
-# smoothed_path = rrt_star.smooth_path(raw_path, rrt_star.obstacle_list)
-smoothed_path = rrt_star.cubic_spline_smooth(raw_path,obstacle_list = obstacles)
-
-plot(rrt_star, raw_path)
+    
+    def plot(self, rrt_star, path):
+        fig, ax = plt.subplots()
+        for node in rrt_star.nodes:
+            if node.parent:
+                ax.plot([node.x, node.parent.x], [node.y, node.parent.y], "-g", linewidth=0.5)
+        for (ox, oy, r) in self.obstacle_list:
+            circle = plt.Circle((ox, oy), r, color='r')
+            ax.add_patch(circle)
+        if path:
+            px, py = zip(*path)
+            ax.plot(px, py, '-b', linewidth=2)
+        ax.plot(rrt_star.start.x, rrt_star.start.y, "bs")
+        ax.plot(rrt_star.goal.x, rrt_star.goal.y, "gs")
+        ax.set_xlim(0, rrt_star.map_size[0])
+        ax.set_ylim(0, rrt_star.map_size[1])
+        ax.set_aspect('equal')
+        plt.grid(True)
+        plt.show()
