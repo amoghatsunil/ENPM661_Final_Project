@@ -133,7 +133,8 @@
       </model>
       <model name='unit_box_0_clone'>
         <pose>2.5 0 0.547881 1.6e-05 -0.000848 -0.018172</pose>
-        <scale>1 1 1</scale>
+        <scale>1 1 1</scale> 
+        <static> 1 </static> 
         <link name='link'>
           <pose>2.5 0 0.547881 1.6e-05 -0.000848 -0.018172</pose>
           <velocity>-0.005728 0 -0.136695 -2e-06 -0.058737 0</velocity>
@@ -2031,7 +2032,7 @@
           </surface>
         </collision>
       </link>
-      <static>0</static>
+      <static>1</static>
       <allow_auto_disable>1</allow_auto_disable>
       <pose>2.51475 -0.409367 0.55 0 -0 0.020499</pose>
     </model>
