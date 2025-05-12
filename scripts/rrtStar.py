@@ -2,19 +2,30 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 import math
+from visibility_rrt.LQR_CBF_planning import LQR_CBF_Planner
 from scipy.interpolate import CubicSpline
 
 class Node:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+    # def __init__(self, x, y):
+    #     self.x = x
+    #     self.y = y
+    #     self.parent = None
+    #     self.cost = 0.0
+    def __init__(self, x, y, yaw=0.0):
+        self.x    = x
+        self.y    = y
+        self.yaw  = yaw        # ← new
         self.parent = None
-        self.cost = 0.0
+        self.cost   = 0.0
 
 class RRTStar:
     def __init__(self, start, goal, map_size, step_size=0.2, goal_sample_rate=0.1, max_iter=2000, search_radius=0.5):
-        self.start = Node(*start) 
-        self.goal = Node(*goal)
+        # self.start = Node(*start) 
+        # self.goal = Node(*goal)
+        sx, sy, syaw = (*start, 0.0)[:3]
+        gx, gy       = goal
+        self.start = Node(sx, sy, yaw=syaw)
+        self.goal  = Node(gx, gy, yaw=0.0)
         self.map_size = map_size
         self.obstacle_list =[
                         (2.75, 2.5, 0.25),
@@ -29,6 +40,9 @@ class RRTStar:
         self.max_iter = max_iter
         self.search_radius = search_radius
         self.nodes = [self.start]
+        self.planner  = LQR_CBF_Planner(visibility=True, collision_cbf=True)
+        self.solve_QP = True
+        self.LQR_gain = {}
 
     def plan(self):
         for i in range(self.max_iter):
@@ -53,8 +67,11 @@ class RRTStar:
         if random.random() < self.goal_sample_rate:
             return self.goal
         else:
-            return Node(random.uniform(0, self.map_size[0]), random.uniform(0, self.map_size[1]))
-
+            return Node(
+                random.uniform(0, self.map_size[0]),
+                random.uniform(0, self.map_size[1]),
+                yaw=0.0
+            )
     def get_nearest_node(self, nodes, rnd_node):
         return min(nodes, key=lambda node: self.distance(node, rnd_node))
 
@@ -124,16 +141,44 @@ class RRTStar:
         smoothed_path.append(smooth_path[-1])
         return smoothed_path
     
+    # def steer(self, from_node, to_node):
+    #     dist = self.distance(from_node, to_node)
+    #     if dist < self.step_size:
+    #         return to_node
+    #     theta = math.atan2(to_node.y - from_node.y, to_node.x - from_node.x)
+    #     new_node = Node(from_node.x + self.step_size * math.cos(theta),
+    #                     from_node.y + self.step_size * math.sin(theta))
+    #     new_node.parent = from_node
+    #     new_node.cost = from_node.cost + self.step_size
+    #     return new_node
+    
     def steer(self, from_node, to_node):
-        dist = self.distance(from_node, to_node)
-        if dist < self.step_size:
-            return to_node
-        theta = math.atan2(to_node.y - from_node.y, to_node.x - from_node.x)
-        new_node = Node(from_node.x + self.step_size * math.cos(theta),
-                        from_node.y + self.step_size * math.sin(theta))
-        new_node.parent = from_node
-        new_node.cost = from_node.cost + self.step_size
-        return new_node
+        start = Node(from_node.x, from_node.y, from_node.yaw)
+        goal  = Node(to_node.x,   to_node.y, yaw=None)
+        traj, error, found = self.planner.lqr_cbf_planning(
+                                  start_node=start,
+                                  goal_node=goal,
+                                  LQR_gain=self.LQR_gain,
+                                  solve_QP=self.solve_QP,
+                                  show_animation=False
+                              )
+        if not found:
+            return None
+        rx, ry, ryaw = traj
+        dist_acc = 0.0
+        for i in range(1, len(rx)):
+            dist_acc += math.hypot(rx[i]-rx[i-1], ry[i]-ry[i-1])
+            if dist_acc >= self.step_size:
+                new = Node(rx[i], ry[i], yaw=ryaw[i])
+                new.parent = from_node
+                new.cost   = from_node.cost + dist_acc
+                return new
+        # fallback if trajectory < step_size
+        
+        new = Node(rx[-1], ry[-1], yaw=ryaw[-1])
+        new.parent = from_node
+        new.cost   = from_node.cost + dist_acc
+        return new
 
     def check_collision(self, node):
         for (ox, oy, radius) in self.obstacle_list:
