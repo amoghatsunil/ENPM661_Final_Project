@@ -323,8 +323,8 @@ if __name__ == '__main__':
                               rewiring_radius=0.5,  
                               iter_max=1000,
                               solve_QP=True,
-                              visibility=True,
-                              collision_cbf=True,
+                              visibility=False,
+                              collision_cbf=False,
                               show_animation=SHOW_ANIMATION)
     waypoints, _ , _ = lqr_rrt_star.planning()
 

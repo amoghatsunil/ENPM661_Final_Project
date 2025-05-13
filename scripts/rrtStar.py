@@ -93,7 +93,7 @@ class RRTStar:
                 for t in np.linspace(0, 1, num=20):
                     x = p1[0] + t * (p2[0] - p1[0])
                     y = p1[1] + t * (p2[1] - p1[1])
-                    if math.hypot(ox - x, oy - y) <= r + 0.1:
+                    if math.hypot(ox - x, oy - y) <= r + 0.3:
                         return False
             return True
 
@@ -131,6 +131,7 @@ class RRTStar:
         new_node.parent = from_node
         new_node.cost = from_node.cost + self.step_size
         return new_node
+
     # def steer(self, from_node, to_node):
     #     start = Node(from_node.x, from_node.y, from_node.yaw)
     #     goal  = Node(to_node.x,   to_node.y, yaw=None)
