@@ -39,8 +39,8 @@ class Plotting:
             ax.add_patch(
                 patches.Rectangle(
                     (ox, oy), w, h,
-                    edgecolor='black',
-                    facecolor='black',
+                    edgecolor='white',
+                    facecolor='white',
                     fill=True
                 )
             )

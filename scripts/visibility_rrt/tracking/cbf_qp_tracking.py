@@ -249,7 +249,7 @@ class UnicyclePathFollower:
                     os.makedirs(current_directory_path + "/output/animations")
                 plt.savefig(current_directory_path +
                             "/output/animations/" + "t_step_" + str(ani_idx) + ".png")
-            break
+                break
 
             self.robot.step(self.u.value)
 

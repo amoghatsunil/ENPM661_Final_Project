@@ -7,10 +7,10 @@ if type == 1:
     x_start = (2.0, 2.0, 0)  # Starting node (x, y, yaw)
     x_goal = (25.0, 3.0)  # Goal node
 if type == 2:
-    WIDTH = 15
-    HEIGHT = 15
-    x_start = (2.0, 2.0, 0)  # Starting node (x, y, yaw)
-    x_goal = (10.0, 2.0)  # Goal node
+    WIDTH = 5
+    HEIGHT = 5
+    x_start = (4.0, 2.0, 0)  # Starting node (x, y, yaw)
+    x_goal = (4.5, 4.5)  # Goal node
 
 class Env:
     def __init__(self):
@@ -24,7 +24,7 @@ class Env:
     def obs_boundary(width, height):  # circle
         w = width
         h = height
-        linewidth = 0.5
+        linewidth = 0
         obs_boundary = [
             [0, 0, linewidth, h],
             [0, h, w, linewidth],

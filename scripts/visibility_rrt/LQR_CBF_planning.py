@@ -10,7 +10,7 @@ from visibility_rrt.visibility_cbf import Visibility_CBF
 import visibility_rrt.utils.env as env
 from visibility_rrt.utils.node import Node
 from visibility_rrt.utils.utils import angular_diff, angle_normalize, calculate_fov_points
-
+import datetime
 """
 Created on Jan 22, 2024
 @author: Taekyung Kim
@@ -189,8 +189,8 @@ class LQR_CBF_Planner:
                 plt.gcf().canvas.mpl_connect('key_release_event',
                         lambda event: [exit(0) if event.key == 'escape' else None])
                 plt.plot(sx, sy, "or")
-                plt.plot(gx, gy, "ob")
-                plt.plot(cx, cy, "om")
+                # plt.plot(gx, gy, "ob")
+                # plt.plot(cx, cy, "om")
                 plt.plot(rx, ry, "-r")
 
                 robot_position = (rx[-1], ry[-1])
@@ -201,7 +201,7 @@ class LQR_CBF_Planner:
 
                 # Draw the yaw line
                 yaw_line_end = (robot_position[0] + math.cos(yaw), robot_position[1] + math.sin(yaw))
-                plt.plot([robot_position[0], yaw_line_end[0]], [robot_position[1], yaw_line_end[1]], 'g-')
+                # plt.plot([robot_position[0], yaw_line_end[0]], [robot_position[1], yaw_line_end[1]], 'g-')
 
                 # Calculate and draw the FOV
                 fov_left, fov_right = calculate_fov_points(robot_position, yaw, fov_angle=self.visibility_cbf.fov, cam_range=cam_range)
@@ -224,12 +224,14 @@ class LQR_CBF_Planner:
                         [fov_left_init[1], current_fov_left[1], current_fov_right[1], fov_right_init[1]], 'grey', alpha=0.1)[0])
 
                 # Fill the FOV triangle
-                fov_fills.append(plt.fill([robot_position[0], fov_left[0], fov_right[0]], [robot_position[1], fov_left[1], fov_right[1]], 'k', alpha=0.1)[0])
+                fov_fills.append(plt.fill([robot_position[0], fov_left[0], fov_right[0]], [robot_position[1], fov_left[1], fov_right[1]], 'k', alpha=0.05)[0])
 
                 plt.axis("equal")
                 plt.title("iteration: {}".format(i))
-                plt.xlim(-10, 10)
-                plt.ylim(-10, 10)
+                plt.xlim(0, 5)
+                plt.ylim(0, 5)
+                plt.title(f"iteration: {i}")
+
                 plt.pause(0.5)
 
             if solve_QP:
@@ -425,6 +427,11 @@ if __name__ == '__main__':
             ax2.legend(loc='upper right')
             ax2.grid()
             plt.show()
+        ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        plt.savefig(f"steerplot_{ts}.png")
+        plt.savefig(f"lqr_cbf_iter_{i:03d}.png", dpi=150)
+
+
 
     print("end main")
 

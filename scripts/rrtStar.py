@@ -2,30 +2,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 import math
-from visibility_rrt.LQR_CBF_planning import LQR_CBF_Planner
 from scipy.interpolate import CubicSpline
-
+from visibility_rrt.LQR_CBF_planning import LQR_CBF_Planner
+import datetime
 class Node:
-    # def __init__(self, x, y):
-    #     self.x = x
-    #     self.y = y
-    #     self.parent = None
-    #     self.cost = 0.0
     def __init__(self, x, y, yaw=0.0):
         self.x    = x
         self.y    = y
         self.yaw  = yaw        # ← new
         self.parent = None
         self.cost   = 0.0
-
 class RRTStar:
-    def __init__(self, start, goal, map_size, step_size=0.2, goal_sample_rate=0.1, max_iter=2000, search_radius=0.5):
-        # self.start = Node(*start) 
-        # self.goal = Node(*goal)
-        sx, sy, syaw = (*start, 0.0)[:3]
-        gx, gy       = goal
-        self.start = Node(sx, sy, yaw=syaw)
-        self.goal  = Node(gx, gy, yaw=0.0)
+    def __init__(self, start, goal, map_size, step_size=0.8, goal_sample_rate=0.3, max_iter=1000, search_radius=0.5):
+        self.start = Node(*start) 
+        self.goal = Node(*goal)
         self.map_size = map_size
         self.obstacle_list =[
                         (2.75, 2.5, 0.25),
@@ -67,23 +57,12 @@ class RRTStar:
         if random.random() < self.goal_sample_rate:
             return self.goal
         else:
-            return Node(
-                random.uniform(0, self.map_size[0]),
-                random.uniform(0, self.map_size[1]),
-                yaw=0.0
-            )
+            return Node(random.uniform(0, self.map_size[0]), random.uniform(0, self.map_size[1]))
+
     def get_nearest_node(self, nodes, rnd_node):
         return min(nodes, key=lambda node: self.distance(node, rnd_node))
 
     def smooth_path(self, path, iterations=100):
-        def is_collision_free(p1, p2):
-            for (ox, oy, r) in self.obstacle_list:
-                for t in np.linspace(0, 1, num=20):
-                    x = p1[0] + t * (p2[0] - p1[0])
-                    y = p1[1] + t * (p2[1] - p1[1])
-                    if math.hypot(ox - x, oy - y) <= r + 0.1:
-                        return False
-            return True
 
         if not path:
             return path
@@ -96,21 +75,20 @@ class RRTStar:
             j = random.randint(i + 1, len(path) - 1)
             if j - i <= 1:
                 continue
-            if is_collision_free(path[i], path[j]):
+            if self.is_collision_free(path[i], path[j]):
                 path = path[:i+1] + path[j:]
         
         # After smoothing, check for collisions on the entire path
         smoothed_path = []
         for i in range(len(path) - 1):
-            if is_collision_free(path[i], path[i+1]):
+            if self.is_collision_free(path[i], path[i+1]):
                 smoothed_path.append(path[i])
         
         # Ensure the last point (goal) is added even if it doesn't cause a collision
         smoothed_path.append(path[-1])
         return smoothed_path
     
-    def cubic_spline_smooth(self, path, num_points=1000):
-        def is_collision_free(p1, p2):
+    def is_collision_free(self, p1, p2):
             for (ox, oy, r) in self.obstacle_list:
                 for t in np.linspace(0, 1, num=20):
                     x = p1[0] + t * (p2[0] - p1[0])
@@ -119,6 +97,8 @@ class RRTStar:
                         return False
             return True
 
+    def cubic_spline_smooth(self, path, num_points=1000):
+        
         # Extract x and y coordinates of the path
         x_points, y_points = zip(*path)
 
@@ -134,7 +114,7 @@ class RRTStar:
         smooth_path = list(zip(smooth_x, smooth_y))
         smoothed_path = []
         for i in range(len(smooth_path) - 1):
-            if is_collision_free(smooth_path[i], smooth_path[i+1]):
+            if self.is_collision_free(smooth_path[i], smooth_path[i+1]):
                 smoothed_path.append(smooth_path[i])
         
         # Ensure the last point (goal) is added even if it doesn't cause a collision
@@ -151,7 +131,6 @@ class RRTStar:
     #     new_node.parent = from_node
     #     new_node.cost = from_node.cost + self.step_size
     #     return new_node
-    
     def steer(self, from_node, to_node):
         start = Node(from_node.x, from_node.y, from_node.yaw)
         goal  = Node(to_node.x,   to_node.y, yaw=None)
@@ -160,7 +139,7 @@ class RRTStar:
                                   goal_node=goal,
                                   LQR_gain=self.LQR_gain,
                                   solve_QP=self.solve_QP,
-                                  show_animation=False
+                                  show_animation=True
                               )
         if not found:
             return None
@@ -179,12 +158,16 @@ class RRTStar:
         new.parent = from_node
         new.cost   = from_node.cost + dist_acc
         return new
-
+    
     def check_collision(self, node):
         for (ox, oy, radius) in self.obstacle_list:
             if math.hypot(ox - node.x, oy - node.y) <= radius + 0.1:
                 return True
         return False
+    def check_collision(self, node):
+        if node.parent is None:
+            return False
+        return not self.is_collision_free((node.parent.x, node.parent.y), (node.x, node.y))
 
     def find_near_nodes(self, new_node):
         n = len(self.nodes)
@@ -202,8 +185,8 @@ class RRTStar:
 
     def rewire(self, new_node, near_nodes):
         for node in near_nodes:
-            new_cost = new_node.cost + self.distance(new_node, node)
-            if new_cost < node.cost and not self.check_collision(node):
+            new_cost = new_node.cost + self.distance(new_node, node) 
+            if new_cost < node.cost and self.is_collision_free((new_node.x, new_node.y), (node.x, node.y)):
                 node.parent = new_node
                 node.cost = new_cost
 
@@ -237,3 +220,5 @@ class RRTStar:
         ax.set_aspect('equal')
         plt.grid(True)
         plt.show()
+        plt.savefig(f"rrt_star_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.png")
+        plt.close(fig)
