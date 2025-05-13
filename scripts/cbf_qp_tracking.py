@@ -1,3 +1,4 @@
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -19,12 +20,12 @@ It has useful tools to analyze the union of sensing footprints and the safety of
 
 class UnicyclePathFollower:
     def __init__(self, type, X0, waypoints, dt=0.05, tf=100,
-                  show_animation=False, plotting=None, env=None,cmd_pub=None):
+                  show_animation=False, plotting=None, env=None):
         self.type = type
         self.waypoints = waypoints
         self.dt = dt
         self.tf = tf
-        self.cmd_pub = cmd_pub
+
         self.current_goal_index = 0  # Index of the current goal in the path
         self.reached_threshold = 1.0
 
@@ -43,7 +44,11 @@ class UnicyclePathFollower:
         self.show_animation = show_animation
         self.plotting = plotting
         self.obs = np.array(env.obs_circle)
-        self.unknown_obs = None
+
+        raw = env.obs_dynamic()               # call the method
+        self.unknown_obs = np.array(raw) 
+        
+        print("unknown_obs.shape:", self.unknown_obs.shape)
 
         if show_animation:
             # Initialize plotting
@@ -73,56 +78,6 @@ class UnicyclePathFollower:
         except ImportError:
             from robot import BaseRobot
         self.robot = BaseRobot(X0.reshape(-1, 1), self.dt, self.ax, self.type)
-
-    def step_control(self, detected_obs):
-        """
-        Perform one control iteration:
-          1) update unknown obstacles
-          2) advance to next waypoint if reached
-          3) set up & solve the CBF-QP
-          4) step the internal robot model
-          5) publish and return a Twist message
-        """
-        # 1) update obstacles
-        if detected_obs is not None and len(detected_obs) > 0:
-            self.set_unknown_obs(detected_obs)
-
-        # 2) switch waypoint if needed
-        current_goal = np.array(self.waypoints[self.current_goal_index]).reshape(-1,1)
-        if self.goal_reached(self.robot.X, current_goal):
-            self.current_goal_index = min(self.current_goal_index+1, len(self.waypoints)-1)
-
-        # 3) build QP
-        goal_xy = self.waypoints[self.current_goal_index][0:2]
-        observed = self.robot.detect_unknown_obs(self.unknown_obs)
-        nearest = self.get_nearest_obs(observed)
-        self.u_ref.value = self.robot.nominal_input(goal_xy)
-        if self.type == 'Unicycle2D':
-            h, dh_dx = self.robot.agent_barrier(nearest)
-            self.A1.value[0,:] = dh_dx @ self.robot.g()
-            self.b1.value[0,:] = dh_dx @ self.robot.f() + self.alpha * h
-        else:  # DynamicUnicycle2D
-            h, h_dot, dh_dot_dx = self.robot.agent_barrier(nearest)
-            self.A1.value[0,:] = dh_dot_dx @ self.robot.g()
-            self.b1.value[0,:] = (
-                dh_dot_dx @ self.robot.f()
-                + (self.alpha1+self.alpha2)*h_dot
-                + self.alpha1*self.alpha2*h
-            )
-        self.cbf_controller.solve(solver=cp.GUROBI, reoptimize=True)
-
-        # 4) step model
-        self.robot.step(self.u.value)
-
-        # 5) package & publish
-        from geometry_msgs.msg import Twist
-        cmd = Twist()
-        cmd.linear.x  = float(self.u.value[0])
-        cmd.angular.z = float(self.u.value[1])
-        if hasattr(self, 'cmd_pub') and self.cmd_pub is not None:
-            self.cmd_pub.publish(cmd)
-        return cmd
-
 
     def setup_control_problem(self):
         self.u = cp.Variable((2, 1))
@@ -217,51 +172,31 @@ class UnicyclePathFollower:
                 self.A1.value[0,:] = dh_dot_dx @ self.robot.g()
                 self.b1.value[0,:] = dh_dot_dx @ self.robot.f() + (self.alpha1+self.alpha2) * h_dot + self.alpha1*self.alpha2*h
 
-            # self.cbf_controller.solve(solver=cp.GUROBI, reoptimize=True)
-            # collide = self.is_collide_unknown()
-
-            # if self.cbf_controller.status != 'optimal' or collide:
-            #     print("ERROR in QP")
-            #     unexpected_beh = -1 # reutn with error
-            #     if self.show_animation:
-            #         self.robot.render_plot()
-            #         current_position = self.robot.X[:2].flatten()
-            #         self.ax.text(current_position[0]+0.5, current_position[1]+0.5, '!', color='red', weight='bold', fontsize=22)
-            #         self.fig.canvas.draw()
-            #         # self.fig.canvas.flush_events() # in newer matplotlib (>3.8.0), this line freezes the animation
-            #         plt.pause(5)
-
-
-
             self.cbf_controller.solve(solver=cp.GUROBI, reoptimize=True)
-            # — safeguard: if solve failed or returned no u, abort and send zero
-            if self.cbf_controller.status != 'optimal' or self.u.value is None:
-                from geometry_msgs.msg import Twist
-                self.get_logger().error("CBF‑QP failed or infeasible, publishing zero Twist")
-                zero = Twist()
-                if hasattr(self, 'cmd_pub') and self.cmd_pub is not None:
-                    self.cmd_pub.publish(zero)
-                return zero
+            collide = self.is_collide_unknown()
 
-            if save_animation:
-                current_directory_path = os.getcwd() 
-                if not os.path.exists(current_directory_path + "/output/animations"):
-                    os.makedirs(current_directory_path + "/output/animations")
-                plt.savefig(current_directory_path +
-                            "/output/animations/" + "t_step_" + str(ani_idx) + ".png")
+            if self.cbf_controller.status != 'optimal' or collide:
+                print("ERROR in QP")
+                unexpected_beh = -1 # reutn with error
+                if self.show_animation:
+                    self.robot.render_plot()
+                    current_position = self.robot.X[:2].flatten()
+                    self.ax.text(current_position[0]+0.5, current_position[1]+0.5, '!', color='red', weight='bold', fontsize=22)
+                    self.fig.canvas.draw()
+                    # self.fig.canvas.flush_events() # in newer matplotlib (>3.8.0), this line freezes the animation
+                    plt.pause(5)
+
+                if save_animation:
+                    current_directory_path = os.getcwd() 
+                    if not os.path.exists(current_directory_path + "/output/animations"):
+                        os.makedirs(current_directory_path + "/output/animations")
+                    plt.savefig(current_directory_path +
+                                "/output/animations/" + "t_step_" + str(ani_idx) + ".png")
                 break
 
             self.robot.step(self.u.value)
-
-            if self.cmd_pub is not None:
-                from geometry_msgs.msg import Twist
-                twist = Twist()
-                # self.u.value is a 2×1 array [[v],[ω]]
-                twist.linear.x  = float(self.u.value[0])
-                twist.angular.z = float(self.u.value[1])
-                self.cmd_pub.publish(twist)
-                if self.show_animation:
-                    self.robot.render_plot()
+            if self.show_animation:
+                self.robot.render_plot()
 
             # update FOV
             self.robot.update_frontier()
@@ -312,8 +247,8 @@ if __name__ == "__main__":
     import os
     sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
-    from utils import plotting
-    from utils import env
+    from visibility_rrt.utils import plotting
+    from visibility_rrt.utils import env
 
 
     env_type = env.type
@@ -329,7 +264,7 @@ if __name__ == "__main__":
         path_to_continuous_waypoints = os.getcwd()+"/output/240312-2128_large_env/state_traj.npy"
 
     elif env_type == 2:
-        path_to_continuous_waypoints = os.getcwd()+"/output/240225-0430/state_traj.npy"
+        path_to_continuous_waypoints = "/home/shreya/Desktop/final_ws/src/ENPM661_Final_Project/scripts/visibility_rrt/visibility_rrtStar.py.npy"
 
 
     waypoints = np.load(path_to_continuous_waypoints, allow_pickle=True)

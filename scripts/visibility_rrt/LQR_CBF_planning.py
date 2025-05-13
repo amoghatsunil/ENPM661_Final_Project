@@ -33,7 +33,7 @@ Currently. only supports unicycle model with velocity control.
 
 class LQR_CBF_Planner:
 
-    def __init__(self, visibility=True, collision_cbf=True):
+    def __init__(self, visibility=True, collision_cbf=False):
 
         self.N = 3  # number of state variables
         self.M = 2  # number of control variables

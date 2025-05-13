@@ -135,7 +135,20 @@ class GoToPoint(Node):
     def get_goals(self):   
         # Create RRT* planner and plan path
         rrt_star = RRTStar(start=(4.5, 1.5), goal=(4.5, 4.5), map_size=(5.0, 5.0)) 
-        raw_path = rrt_star.plan() 
+
+        # record the start time
+        t0 = time.time()
+
+        # run the planner
+
+        raw_path = rrt_star.plan()
+
+        # record the end time
+        t1 = time.time()
+
+        planning_time = t1 - t0
+        print(f"Planning took {planning_time:.3f} seconds")
+        
         # smoothed_path = rrt_star.smooth_path(raw_path)
         # smoothed_path = rrt_star.cubic_spline_smooth(raw_path)
         rrt_star.plot(rrt_star, raw_path)      

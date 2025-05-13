@@ -7,7 +7,7 @@ import os
 from visibility_rrt.utils import env, plotting, utils
 from visibility_rrt.utils.node import Node
 from visibility_rrt.LQR_CBF_planning import LQR_CBF_Planner
-from visibility_rrt.tracking.cbf_qp_tracking import UnicyclePathFollower
+from cbf_qp_tracking import UnicyclePathFollower
 
 """
 Created on Jan 23, 2024
@@ -164,7 +164,7 @@ class VisibilityRRTStar:
         node_goal.yaw = theta
 
         # rtraj = [rx, ry, ryaw]: feasible robot trajectory
-        rtraj, _, _, = self.lqr_cbf_planning(node_start, node_goal, self.LQR_Gain, solve_QP=self.solve_QP, show_animation=False)
+        rtraj, _, _, = self.lqr_cbf_planning(node_start, node_goal, self.LQR_Gain, solve_QP=self.solve_QP, show_animation=True)
         rx, ry, ryaw = rtraj
         if len(rx) == 1:
             return None
@@ -321,16 +321,26 @@ if __name__ == '__main__':
                               max_rewiring_node_dist=1,
                               goal_sample_rate=0.1,
                               rewiring_radius=0.5,  
-                              iter_max=2000,
-                              solve_QP=False,
-                              visibility=False,
-                              collision_cbf=False,
+                              iter_max=1000,
+                              solve_QP=True,
+                              visibility=True,
+                              collision_cbf=True,
                               show_animation=SHOW_ANIMATION)
     waypoints, _ , _ = lqr_rrt_star.planning()
 
     x_init = waypoints[0]
-    path_follower = UnicyclePathFollower('DynamicUnicycle2D', x_init, waypoints,
-                                         show_animation=SHOW_ANIMATION,
-                                         plotting=lqr_rrt_star.plotting,
-                                         env=lqr_rrt_star.env)
+    path_follower = UnicyclePathFollower(
+        'DynamicUnicycle2D',
+        x_init,
+        waypoints,
+        show_animation=True,
+        plotting=lqr_rrt_star.plotting,
+        env=lqr_rrt_star.env
+    )
+
+    # supply the actual list of circles, not the method itself
+    # unknown_obs = lqr_rrt_star.env.obs_circle()  
+    # path_follower.set_unknown_obs(unknown_obs)
+    
     unexpected_beh = path_follower.run(save_animation=True)
+

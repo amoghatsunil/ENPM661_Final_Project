@@ -27,7 +27,7 @@ def angle_normalize(x):
     return (((x + math.pi) % (2 * math.pi)) - math.pi)
 
 # Function to calculate the FOV triangle points
-def calculate_fov_points(position, yaw, fov_angle = math.pi/2, cam_range = 3):
+def calculate_fov_points(position, yaw, fov_angle =  70 * (math.pi/180), cam_range = 3):
     half_fov = fov_angle/2
     left_angle = yaw - half_fov
     right_angle = yaw + half_fov

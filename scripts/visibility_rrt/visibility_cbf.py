@@ -30,8 +30,8 @@ class Visibility_CBF:
         self.k1_unicyle_cbf = 3 # CBF coefficient for h(x)
 
         # robot attributes
-        self.fov = 70 * (math.pi/180) # field of view
-        self.cam_range = 3.0 # camera range
+        self.fov = 0 * (math.pi/180) # field of view
+        self.cam_range = 5.0 # camera range
         self.w_lower_lim = -0.5
         self.w_upper_lim = 0.5
         self.unicycle_constant_v = 1.0

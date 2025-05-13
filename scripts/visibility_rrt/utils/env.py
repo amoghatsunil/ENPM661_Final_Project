@@ -72,3 +72,13 @@ class Env:
         # for i in range(6):
         #     obs_cir.append([random.uniform(0, WIDTH), random.uniform(0, HEIGHT), 1])
         return obs_cir
+    
+
+    @staticmethod
+    def obs_dynamic():
+        obs_dyn =     [    (1.0, 4.5, 0.25),
+                       (2.3, 1.5, 0.25)
+                        ]
+        
+        return obs_dyn
+        # return obs_dyn
