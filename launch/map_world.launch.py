@@ -36,7 +36,7 @@ def generate_launch_description():
     world = os.path.join(
         get_package_share_directory('proj5_amogha_sagar_shreya'),
         'worlds',
-        'map_dynamic_static_obstacles.world'
+        'map_world.world'
     )
 
     gzserver_cmd = IncludeLaunchDescription(
