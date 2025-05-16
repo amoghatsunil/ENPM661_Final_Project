@@ -1,11 +1,11 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3 
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 import math 
 import time
 from rrtStar import RRTStar
-
+from rrtStarCBF import RRTStarCBF
 
 class GoToPoint(Node):
     def __init__(self):
@@ -134,9 +134,9 @@ class GoToPoint(Node):
 
     def get_goals(self):   
         # Create RRT* planner and plan path
-        rrt_star = RRTStar(start=(4.5, 1.5), goal=(4.5, 3.5), map_size=(5.0, 5.0)) 
+        rrt_star = RRTStar(start=(4.5, 1.5), goal=(4.5, 3.5), map_size=(5.0, 5.0))  
         raw_path = rrt_star.plan() 
-        # smoothed_path = rrt_star.smooth_path(raw_path)
+        smoothed_path = rrt_star.smooth_path(raw_path)
         # smoothed_path = rrt_star.cubic_spline_smooth(raw_path)
         rrt_star.plot(rrt_star, raw_path)      
  

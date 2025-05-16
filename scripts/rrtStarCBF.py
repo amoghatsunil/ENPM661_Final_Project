@@ -3,16 +3,18 @@ import matplotlib.pyplot as plt
 import random
 import math
 from scipy.interpolate import CubicSpline
-
+from visibility_rrt.LQR_CBF_planning import LQR_CBF_Planner
+import datetime
 class Node:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+    def __init__(self, x, y, yaw=0.0):
+        self.x    = x
+        self.y    = y
+        self.yaw  = yaw        
         self.parent = None
-        self.cost = 0.0
+        self.cost   = 0.0
 
-class RRTStar:
-    def __init__(self, start, goal, map_size, step_size=0.1, goal_sample_rate=0.3, max_iter=2000, search_radius=0.5):
+class RRTStarCBF:
+    def __init__(self, start, goal, map_size, step_size=0.9, goal_sample_rate=0.3, max_iter=1000, search_radius=0.5):
         self.start = Node(*start) 
         self.goal = Node(*goal)
         self.map_size = map_size
@@ -22,13 +24,16 @@ class RRTStar:
                         (3.75, 2.5, 0.25),
                         (4.25, 2.5, 0.25),
                         (4.75, 2.5, 0.25),
-                        (2.0, 3.75, 0.25)
+                        (2.0, 3.5, 0.25)
                         ]
         self.step_size = step_size
         self.goal_sample_rate = goal_sample_rate
         self.max_iter = max_iter
         self.search_radius = search_radius
         self.nodes = [self.start]
+        self.planner  = LQR_CBF_Planner(visibility=True, collision_cbf=True)
+        self.solve_QP = True
+        self.LQR_gain = {}
 
     def plan(self):
         for i in range(self.max_iter):
@@ -89,7 +94,7 @@ class RRTStar:
                 for t in np.linspace(0, 1, num=20):
                     x = p1[0] + t * (p2[0] - p1[0])
                     y = p1[1] + t * (p2[1] - p1[1])
-                    if math.hypot(ox - x, oy - y) <= r + 0.3:
+                    if math.hypot(ox - x, oy - y) <= r + 0.1:
                         return False
             return True
 
@@ -116,21 +121,39 @@ class RRTStar:
         # Ensure the last point (goal) is added even if it doesn't cause a collision
         smoothed_path.append(smooth_path[-1])
         return smoothed_path
-    
+     
     def steer(self, from_node, to_node):
-        dist = self.distance(from_node, to_node)
-        if dist < self.step_size:
-            new_node = Node(to_node.x, to_node.y)
-            new_node.parent = from_node
-            new_node.cost = from_node.cost + dist
-            return new_node
-        theta = math.atan2(to_node.y - from_node.y, to_node.x - from_node.x)
-        new_node = Node(from_node.x + self.step_size * math.cos(theta),
-                        from_node.y + self.step_size * math.sin(theta))
-        new_node.parent = from_node
-        new_node.cost = from_node.cost + self.step_size
-        return new_node
- 
+        start = Node(from_node.x, from_node.y, from_node.yaw)
+        goal  = Node(to_node.x,   to_node.y, yaw=None)
+        traj, error, found = self.planner.lqr_cbf_planning(
+                                  start_node=start,
+                                  goal_node=goal,
+                                  LQR_gain=self.LQR_gain,
+                                  solve_QP=self.solve_QP,
+                                  show_animation=False
+                              )
+        if not found:
+            return None
+        rx, ry, ryaw = traj
+        dist_acc = 0.0
+        for i in range(1, len(rx)):
+            dist_acc += math.hypot(rx[i]-rx[i-1], ry[i]-ry[i-1])
+            if dist_acc >= self.step_size:
+                new = Node(rx[i], ry[i], yaw=ryaw[i])
+                new.parent = from_node
+                new.cost   = from_node.cost + dist_acc
+                return new 
+        
+        new = Node(rx[-1], ry[-1], yaw=ryaw[-1])
+        new.parent = from_node
+        new.cost   = from_node.cost + dist_acc
+        return new
+    
+    def check_collision(self, node):
+        for (ox, oy, radius) in self.obstacle_list:
+            if math.hypot(ox - node.x, oy - node.y) <= radius + 0.1:
+                return True
+        return False
     def check_collision(self, node):
         if node.parent is None:
             return False
@@ -173,9 +196,9 @@ class RRTStar:
         fig, ax = plt.subplots()
         for node in rrt_star.nodes:
             if node.parent:
-                ax.plot([node.x, node.parent.x], [node.y, node.parent.y], "-r", linewidth=0.5)
+                ax.plot([node.x, node.parent.x], [node.y, node.parent.y], "-g", linewidth=0.5)
         for (ox, oy, r) in self.obstacle_list:
-            circle = plt.Circle((ox, oy), r, color='g')
+            circle = plt.Circle((ox, oy), r, color='r')
             ax.add_patch(circle)
         if path:
             px, py = zip(*path)
@@ -186,4 +209,5 @@ class RRTStar:
         ax.set_ylim(0, rrt_star.map_size[1])
         ax.set_aspect('equal')
         plt.grid(True)
-        plt.show()
+        plt.show() 
+        plt.close(fig)
