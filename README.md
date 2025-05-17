@@ -93,4 +93,4 @@ If you were to notice an error message "FileNotFoundError: [Errno 2] No such fil
 sudo apt-get install ffmpeg
 ```
 
-and then restart the visualization process.
+and then restart the setup and simulation process.
