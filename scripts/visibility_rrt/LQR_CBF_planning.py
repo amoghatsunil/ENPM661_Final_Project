@@ -103,7 +103,7 @@ class LQR_CBF_Planner:
         return cx, cy
 
     
-    def lqr_cbf_planning(self, start_node, goal_node, LQR_gain, solve_QP = False, show_animation = True):
+    def lqr_cbf_planning(self, start_node, goal_node, LQR_gain, solve_QP = False, show_animation = False):
 
         sx = start_node.x
         sy = start_node.y
