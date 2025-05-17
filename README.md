@@ -16,8 +16,9 @@ Once that is all done, follow these steps to set up and launch the project in Ga
 
 First, clone the repository to your local machine.
 
-You can do this from visual studio by clicking the source control buttom, then selecting the "Clone repository" option and then pasting the link to this Github. After that, you select your local folder and you select the top right icon that says "Select as Repository Destination."
-
+```bash
+git clone https://github.com/amoghatsunil/ENPM661_Final_Project.git
+```
 
 ## 2. Run following commands in the termial
 The run the following command in the terminal
