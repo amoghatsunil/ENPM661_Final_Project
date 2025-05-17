@@ -38,8 +38,4 @@ Time and space complexity analysis
 ```bash
 python3 visibility_rrtStar.py
 ```
-Changes to make in order to test new start and end goal points.
-https://github.com/amoghatsunil/ENPM661_Final_Project/blob/c819a4118ba3818f20f3e0956ce633b8fe226789/scripts/visibility_rrtStar.py#L309
-https://github.com/amoghatsunil/ENPM661_Final_Project/blob/c819a4118ba3818f20f3e0956ce633b8fe226789/scripts/visibility_rrtStar.py#L310
-
-* To test new start and end goal points, edit lines [31](https://github.com/amoghatsunil/ENPM661_Final_Project/blob/main/scripts/nav_rrtStar.py#L31) and [137](https://github.com/amoghatsunil/ENPM661_Final_Project/blob/main/scripts/nav_rrtStar.py#L137) in `scripts/nav_rrtStar.py`.
+* To test new start and end goal points, edit lines [31](https://github.com/amoghatsunil/ENPM661_Final_Project/blob/main/scripts/visibility_rrtStar.py#L309) and [137](https://github.com/amoghatsunil/ENPM661_Final_Project/blob/main/scripts/visibility_rrtStar.py#L310) in `scripts/visibility_rrtStar.py`.
