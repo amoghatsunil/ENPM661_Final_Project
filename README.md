@@ -47,11 +47,11 @@ Changes to make in order to test new start and end goal points.
 ![image](https://github.com/user-attachments/assets/688f3247-cfd8-49bc-913c-9635f15b2e38)
 https://github.com/amoghatsunil/ENPM661_Final_Project/blob/c819a4118ba3818f20f3e0956ce633b8fe226789/scripts/nav_rrtStar.py#L137
 https://github.com/amoghatsunil/ENPM661_Final_Project/blob/c819a4118ba3818f20f3e0956ce633b8fe226789/scripts/nav_rrtStar.py#L31
- (todo) write about conversion from algo to gazebo coordinate systemn. (x,y  --> (y, 5-x)
+ 
+ For our project,our 2D map and Gazebo map are not aligned similarly so we have to make the following transformation to ensure the robot and the gazebo world obstalces spawn in the positions similar to that of the 2D Map.
 
 # Setup and Launch for Visibility RRT* and Visibility RRT* with CBF.
-For this, you just either of the bottom 2 commands depending on what you want to test. This is only a 2D simulation and this was
-
+For this, you just either of the bottom 2 commands depending on what you want to test. This is only a 2D simulation.
 
 ```bash
 python3 scripts/visibility_rrtStar.py
@@ -77,7 +77,16 @@ and [310](https://github.com/amoghatsunil/ENPM661_Final_Project/blob/main/script
     ```
 
 ```bash
-python3 visibility_rrtStar_cbf.py
+python3 scripts/visibility_rrtStar_cbf.py
 ```
 * To test new start and end goal points,Edit lines [306](https://github.com/amoghatsunil/ENPM661_Final_Project/blob/main/scripts/visibility_rrtStar_cbf.py#L306)
 and [307](https://github.com/amoghatsunil/ENPM661_Final_Project/blob/main/scripts/visibility_rrtStar_cbf.py#L307)  in `scripts/visibility_rrtStar_cbf.py`.
+
+If you were to notice an error message "FileNotFoundError: [Errno 2] No such file or directory: 'ffmpeg'" when running either of the above simulations, run the following command in the terminal.
+
+
+```bash
+sudo apt-get install ffmpeg
+```
+
+and then restart the visualization process.
