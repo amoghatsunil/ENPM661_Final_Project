@@ -35,3 +35,9 @@ https://github.com/amoghatsunil/ENPM661_Final_Project/blob/c819a4118ba3818f20f3e
 todo
 Time and space complexity analysis
 
+```bash
+python3 visibility_rrtStar.py
+```
+Changes to make in order to test new start and end goal points.
+https://github.com/amoghatsunil/ENPM661_Final_Project/blob/c819a4118ba3818f20f3e0956ce633b8fe226789/scripts/visibility_rrtStar.py#L309
+https://github.com/amoghatsunil/ENPM661_Final_Project/blob/c819a4118ba3818f20f3e0956ce633b8fe226789/scripts/visibility_rrtStar.py#L310
