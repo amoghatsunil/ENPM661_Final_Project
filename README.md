@@ -6,7 +6,7 @@ Follow these steps to set up and launch the project in Gazebo:
 
 First, clone the repository to your local machine.
 
-You can do this from visual studio by clicking the source control buttom, then selecting the "Clone repository" option and then pasting the link to this Github. After that, you select your local folder and you select
+You can do this from visual studio by clicking the source control buttom, then selecting the "Clone repository" option and then pasting the link to this Github. After that, you select your local folder and you select the top right icon that says "Select as Repository Destination."
 
 
 ## 2. Run following commands in the termial
@@ -44,11 +44,11 @@ https://github.com/amoghatsunil/ENPM661_Final_Project/blob/c819a4118ba3818f20f3e
  (todo) write about conversion from algo to gazebo coordinate systemn. (x,y  --> (y, 5-x)
 
 # Setup and Launch for Visibility RRT* and Visibility RRT* with CBF.
-
+For this, you just either of the bottom 2 commands depending on what you want to test. This is only a 2D simulation and this was
 
 
 ```bash
-python3 visibility_rrtStar.py
+python3 scripts/visibility_rrtStar.py
 ```
 * To test new start and end goal points,Edit lines [309](https://github.com/amoghatsunil/ENPM661_Final_Project/blob/main/scripts/visibility_rrtStar.py#L309)
 and [310](https://github.com/amoghatsunil/ENPM661_Final_Project/blob/main/scripts/visibility_rrtStar.py#L310)  in `scripts/visibility_rrtStar.py`.
