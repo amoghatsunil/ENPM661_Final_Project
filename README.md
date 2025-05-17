@@ -46,5 +46,5 @@ and [310](https://github.com/amoghatsunil/ENPM661_Final_Project/blob/main/script
 ```bash
 python3 visibility_rrtStar_cbf.py
 ```
-* To test new start and end goal points,Edit lines [309](https://github.com/amoghatsunil/ENPM661_Final_Project/blob/main/scripts/visibility_rrtStar_cbf.py#L306)
-and [310](https://github.com/amoghatsunil/ENPM661_Final_Project/blob/main/scripts/visibility_rrtStar_cbf.py#L307)  in `scripts/visibility_rrtStar_cbf.py`.
+* To test new start and end goal points,Edit lines [306](https://github.com/amoghatsunil/ENPM661_Final_Project/blob/main/scripts/visibility_rrtStar_cbf.py#L306)
+and [307](https://github.com/amoghatsunil/ENPM661_Final_Project/blob/main/scripts/visibility_rrtStar_cbf.py#L307)  in `scripts/visibility_rrtStar_cbf.py`.
