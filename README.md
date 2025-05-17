@@ -4,7 +4,7 @@ Before proceeding with the following launch, ensure the following.
 
 Install libraries: numpy, matplotlib, and scipy.
 
-For running CBF-QP, it requires cvxpy, gurobipy, and shapely. This is a requirement from the original GitHub Repo that inspired this study.
+For running CBF-QP, it requires cvxpy, gurobipy, and shapely. This is a requirement from the original GitHub Repo that inspired this study "https://github.com/tkkim-robot/visibility_rrt"
 
 Once that is all done, follow these steps to set up and launch the project in Gazebo:  
 
