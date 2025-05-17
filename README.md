@@ -6,6 +6,10 @@ Install libraries: numpy, matplotlib, and scipy.
 
 For running CBF-QP, it requires cvxpy, gurobipy, and shapely.
 
+```bash
+pip install numpy matplotlib scipy cvxpy shapely
+```
+
 Once that is all done, follow these steps to set up and launch the project in Gazebo:  
 
 ## 1. Clone the Repository
