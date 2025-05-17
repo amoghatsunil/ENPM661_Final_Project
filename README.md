@@ -41,7 +41,22 @@ python3 visibility_rrtStar.py
 * To test new start and end goal points,Edit lines [309](https://github.com/amoghatsunil/ENPM661_Final_Project/blob/main/scripts/visibility_rrtStar.py#L309)
 and [310](https://github.com/amoghatsunil/ENPM661_Final_Project/blob/main/scripts/visibility_rrtStar.py#L310)  in `scripts/visibility_rrtStar.py`.
 
+* To tune the planner’s behavior, edit the arguments in the `VisibilityRRTStar(...)` call in `scripts/visibility_rrtStar.py` (around lines [312–323](https://github.com/amoghatsunil/ENPM661_Final_Project/blob/main/scripts/visibility_rrtStar.py#L312-L323)), for example:
 
+    ```python
+    lqr_rrt_star = VisibilityRRTStar(
+        x_start=x_start, x_goal=x_goal,
+        max_sampled_node_dist=0.5,      # how far each random sample can be
+        max_rewiring_node_dist=1.0,     # radius for rewiring nearby nodes
+        goal_sample_rate=0.1,           # probability of sampling the goal directly
+        rewiring_radius=0.5,            # neighborhood radius when rewiring
+        iter_max=1000,                  # max number of iterations
+        solve_QP=True,                  # enforce CBF via quadratic program
+        visibility=True,                # use visibility‐guided sampling
+        collision_cbf=False,            # apply collision constraints via CBF
+        show_animation=SHOW_ANIMATION   # toggle on‐screen plotting
+    )
+    ```
 
 ```bash
 python3 visibility_rrtStar_cbf.py
