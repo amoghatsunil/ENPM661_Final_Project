@@ -9,7 +9,7 @@ from visibility_rrt.utils.node import Node
 from visibility_rrt.LQR_CBF_planning import LQR_CBF_Planner
 from cbf_qp_tracking import UnicyclePathFollower
 
-# Flag to control animation display
+
 SHOW_ANIMATION = False
 
 class VisibilityRRTStar:
@@ -17,7 +17,7 @@ class VisibilityRRTStar:
                  goal_sample_rate=0.1, rewiring_radius=20, iter_max=1000, solve_QP=False,
                  visibility=True, collision_cbf=True,
                  show_animation=False, path_saved=None):
-        # Initialize parameters for RRT* algorithm
+        # Initialize the RRT* algorithm with parameters and environment setup
         self.x_start = Node(x_start)
         self.x_goal = Node(x_goal)
         self.max_sampled_node_dist = max_sampled_node_dist
@@ -46,7 +46,7 @@ class VisibilityRRTStar:
         self.is_collision = utils_.is_collision
         lqr_cbf_planner = LQR_CBF_Planner(visibility=visibility, collision_cbf=collision_cbf)
         self.lqr_cbf_planning = lqr_cbf_planner.lqr_cbf_planning
-        self.LQR_Gain = dict() # Dictionary to store LQR gains
+        self.LQR_Gain = dict() # Call by reference, so it's modified in LQRPlanner
 
     def planning(self):
         # Main planning function for RRT*
@@ -70,7 +70,7 @@ class VisibilityRRTStar:
             compute_node_end_time = time.time()
 
             if self.show_animation:
-                # Visualization during iterations
+                # Visualization for debugging and analysis
                 if k % 100 == 0:
                     print('rrtStar sampling iterations: ', k)
                     print('rrtStar 1000 iterations sampling time: ', time.time() - start_time)
@@ -104,7 +104,7 @@ class VisibilityRRTStar:
             print('No path found!')
             return None, compute_node_time, rewire_time
 
-        # Extract the path to the goal
+        # Extract the path from the tree
         self.path = self.extract_path(node_end=self.vertex[index])
         self.path = np.array(self.path, dtype=np.float64)
         print("path: ", self.path)
@@ -122,7 +122,7 @@ class VisibilityRRTStar:
         return self.path, compute_node_time, rewire_time
 
     def generate_random_node(self, goal_sample_rate=0.1):
-        # Generate a random node within the environment
+        # Generate a random node in the environment
         delta = self.sample_delta
 
         if np.random.random() > goal_sample_rate: # Random sampling
@@ -150,20 +150,20 @@ class VisibilityRRTStar:
         node_goal.y = node_start.y + dist * math.sin(theta)
         node_goal.yaw = theta
 
-        # Perform LQR-CBF planning to generate a feasible trajectory
+        # Generate a feasible trajectory using LQR CBF planning
         rtraj, _, _, = self.lqr_cbf_planning(node_start, node_goal, self.LQR_Gain, solve_QP=self.solve_QP, show_animation=False)
         rx, ry, ryaw = rtraj
         if len(rx) == 1:
             return None
         px, py, traj_cost = self.sample_path(rx, ry)
 
-        # Create a new node based on the trajectory
         node_new = Node((rx[-1], ry[-1], ryaw[-1]))
         node_new.parent = node_start
 
         # Calculate cost in terms of trajectory length
         node_new.cost = node_start.cost + sum(abs(c) for c in traj_cost)
         return node_new
+
 
     def find_near_neighbor(self, node_new):
         """
@@ -172,7 +172,6 @@ class VisibilityRRTStar:
         n = len(self.vertex) + 1
         r = min(self.max_rewiring_node_dist, self.rewiring_radius * math.sqrt((math.log(n) / n)))
 
-        # Find nodes within the rewiring radius
         dist_table = [math.hypot(nd.x - node_new.x, nd.y - node_new.y) for nd in self.vertex]
         dist_table_index = [ind for ind in range(len(dist_table)) if dist_table[ind] <= r and
                             not self.is_collision(node_new, self.vertex[ind])]
@@ -187,13 +186,12 @@ class VisibilityRRTStar:
                 px.append(t * rx[i+1] + (1.0 - t) * rx[i])
                 py.append(t * ry[i+1] + (1.0 - t) * ry[i])
 
-        # Calculate trajectory costs
         dx, dy = np.diff(px), np.diff(py)
         traj_costs = [math.sqrt(idx ** 2 + idy ** 2) for (idx, idy) in zip(dx, dy)]
         return px, py, traj_costs
 
     def cal_LQR_new_cost(self, node_start, node_goal):
-        # Calculate the cost of a new trajectory using LQR-CBF planning
+        # Calculate the cost of a new node using LQR planning
         rtraj, _, can_reach = self.lqr_cbf_planning(node_start, node_goal, self.LQR_Gain, show_animation=False, solve_QP=self.solve_QP)
         rx, ry, ryaw = rtraj
         px, py, traj_cost = self.sample_path(rx, ry)
@@ -210,10 +208,10 @@ class VisibilityRRTStar:
         cost = []
         for i in neighbor_index:
 
-            # Check if the neighbor node can reach node_new
+            # Check if neighbor_node can reach node_new
             _, _, can_reach = self.lqr_cbf_planning(self.vertex[i], node_new, self.LQR_Gain, show_animation=False, solve_QP=self.solve_QP)
 
-            if can_reach and not self.is_collision(self.vertex[i], node_new):  # Collision check
+            if can_reach and not self.is_collision(self.vertex[i], node_new):  # Collision check should be updated if using CBF
                 update_cost, _ = self.cal_LQR_new_cost(self.vertex[i], node_new)
                 cost.append(update_cost)
             else:
@@ -224,14 +222,13 @@ class VisibilityRRTStar:
             print('There is no good path.(min_cost is inf)')
             return None
 
-        # Update the parent of node_new to the node with the minimum cost
         cost_min_index = neighbor_index[int(np.argmin(cost))]
         node_new.parent = self.vertex[cost_min_index] 
-        node_new.parent.childrenNodeInds.add(len(self.vertex)-1) # Add the index of node_new to the children of its parent
+        node_new.parent.childrenNodeInds.add(len(self.vertex)-1) # Add the index of node_new to the children of its parent. This step is essential when rewiring the tree to project the changes of the cost of the rewired node to its antecessors  
         
 
     def rewire(self, node_new, neighbor_index):
-        # Rewire the tree to improve path costs
+        # Rewire the tree to optimize the path
         for i in neighbor_index:
             node_neighbor = self.vertex[i]
 
@@ -245,9 +242,9 @@ class VisibilityRRTStar:
                     self.updateCosts(node_neighbor)
 
     def updateCosts(self,node):
-        # Update the costs of all child nodes recursively
+        # Update the costs of all children nodes recursively
         for ich in node.childrenNodeInds: 
-            self.vertex[ich].cost = self.cal_LQR_new_cost(node,self.vertex[ich])[0] # Update cost
+            self.vertex[ich].cost = self.cal_LQR_new_cost(node,self.vertex[ich])[0] # FIXME since we already know that this path is safe, we only need to compute the cost 
             self.updateCosts(self.vertex[ich])
             
 
@@ -267,7 +264,7 @@ class VisibilityRRTStar:
         return len(self.vertex) - 1
 
     def extract_path(self, node_end):
-        # Extract the path from the start to the goal
+        # Extract the path from the tree by backtracking from the goal
         path = [[self.x_goal.x, self.x_goal.y, self.x_goal.yaw]]
         node = node_end
 
@@ -299,9 +296,9 @@ class VisibilityRRTStar:
 if __name__ == '__main__':
     SHOW_ANIMATION = False
 
-    # Set up the environment type and start/goal positions
     env_type = env.type
 
+    # Define start and goal positions based on environment type
     if env_type == 1:
         x_start = (2.0, 2.0, 0)  # Starting node (x, y, yaw)
         x_goal = (25.0, 3.0)  # Goal node
@@ -318,7 +315,7 @@ if __name__ == '__main__':
                               iter_max=1000,
                               solve_QP=True,
                               visibility=True,
-                              collision_cbf=False,
+                              collision_cbf=True,
                               show_animation=SHOW_ANIMATION)
     waypoints, _ , _ = lqr_rrt_star.planning()
 

@@ -168,6 +168,9 @@ class RRTStar:
 
 # Example usage:
 if __name__ == '__main__':
-    planner = RRTStar(start=(1, 1), goal=(5, 4), map_size=(6, 5))
+    start_x, start_y = map(float, input("Enter start coordinates (x y): ").split())
+    goal_x, goal_y = map(float, input("Enter goal coordinates (x y): ").split())
+    map_width, map_height = map(float, input("Enter map size (width height): ").split())
+    planner = RRTStar(start=(start_x, start_y), goal=(goal_x, goal_y), map_size=(map_width, map_height))
     path = planner.plan()
     planner.plot(path)
