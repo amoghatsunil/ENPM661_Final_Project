@@ -1,21 +1,30 @@
+# Setup and Launch for RRT* and RRT* with CBF
+
+Follow these steps to set up and launch the project in Gazebo:  
+
+## 1. Clone the Repository
+
+First, clone the repository to your local machine
 
 
-
+## 2. Run following commands in the termial
+The run the following command in the terminal
 
 ```bash
 colcon build
 ```
-
 ```bash
 export TURTLEBOT3_MODEL=waffle
+```
+```bash
+source install/setup.bash
 ```
 ```bash
 ros2 launch proj5_amogha_sagar_shreya map_world.launch.py
 ```
 
-```bash
-cd src/proj5_amogha_sagar_shreya/scripts/
-```
+## 3. Run following commands in a new termial
+In new terminal, do either of the following nav_rrtStar.py or nav_rrtStarCBF.py to test the gazebo simulation of rrt* or rrt* with CBF
 
 ```bash
 python3 nav_rrtStar.py
@@ -32,8 +41,9 @@ https://github.com/amoghatsunil/ENPM661_Final_Project/blob/c819a4118ba3818f20f3e
 https://github.com/amoghatsunil/ENPM661_Final_Project/blob/c819a4118ba3818f20f3e0956ce633b8fe226789/scripts/nav_rrtStar.py#L31
  (todo) write about conversion from algo to gazebo coordinate systemn. (x,y  --> (y, 5-x)
 
-todo
-Time and space complexity analysis
+# Setup and Launch for Visibility RRT* and Visibility RRT* with CBF.
+
+
 
 ```bash
 python3 visibility_rrtStar.py
