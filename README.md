@@ -4,7 +4,9 @@ Follow these steps to set up and launch the project in Gazebo:
 
 ## 1. Clone the Repository
 
-First, clone the repository to your local machine
+First, clone the repository to your local machine.
+
+You can do this from visual studio by clicking the source control buttom, then selecting the "Clone repository" option and then pasting the link to this Github. After that, you select your local folder and you select
 
 
 ## 2. Run following commands in the termial
@@ -27,11 +29,11 @@ ros2 launch proj5_amogha_sagar_shreya map_world.launch.py
 In new terminal, do either of the following nav_rrtStar.py or nav_rrtStarCBF.py to test the gazebo simulation of rrt* or rrt* with CBF
 
 ```bash
-python3 nav_rrtStar.py
+python3 scripts/nav_rrtStar.py
 ```
 
 ```bash
-python3 nav_rrtStarCBF.py
+python3 scripts/nav_rrtStarCBF.py
 ```
 
 Changes to make in order to test new start and end goal points.
